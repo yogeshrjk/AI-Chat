@@ -1,4 +1,6 @@
 import { Highlight, themes } from "prism-react-renderer";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import { jwtDecode } from "jwt-decode";
 import { marked } from "marked";
 import {
   Copy,
@@ -19,6 +21,18 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 
 export default function Chat() {
+  const token = localStorage.getItem("token");
+  let userID = null;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      userID = decoded.userId;
+    } catch (err) {
+      console.error("Failed to decode token", err);
+    }
+  }
+
   const { model } = useOutletContext();
   const welcomeMessages = [
     "Hello, how can I assist you today?",
@@ -43,14 +57,57 @@ export default function Chat() {
 
   const [text, setText] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [messages, setMessages] = useState(() => {
-    const saved = sessionStorage.getItem("chatMessages");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState([]);
   const [welcomeMessage, setWelcomeMessage] = useState(getWelcomeMessage());
   const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  const ADD_CHAT = gql`
+    mutation AddChat(
+      $userMessage: String!
+      $aiResponse: String!
+      $userID: ID!
+    ) {
+      addChat(
+        userMessage: $userMessage
+        aiResponse: $aiResponse
+        userID: $userID
+      ) {
+        _id
+        userMessage
+        aiResponse
+        createdAt
+      }
+    }
+  `;
+
+  const GET_CHATS = gql`
+    query GetChats($userID: ID!) {
+      getChats(userID: $userID) {
+        _id
+        userID
+        userMessage
+        aiResponse
+        createdAt
+      }
+    }
+  `;
+
+  const [addChat] = useMutation(ADD_CHAT);
+  const { data, loading, error, refetch } = useQuery(GET_CHATS, {
+    variables: { userID },
+  });
+
+  useEffect(() => {
+    if (data?.getChats) {
+      const chats = data.getChats.flatMap((chat) => [
+        { role: "user", content: chat.userMessage },
+        { role: "assistant", content: chat.aiResponse },
+      ]);
+      setMessages(chats);
+    }
+  }, [data]);
 
   // SpeechRecognition
   const {
@@ -64,9 +121,6 @@ export default function Chat() {
       setWelcomeMessage(getWelcomeMessage());
     }
   }, [messages.length]);
-  useEffect(() => {
-    sessionStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
 
   const handleInput = (e) => {
     const textarea = e.target;
@@ -85,7 +139,6 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // Keep text in sync with transcript while listening
   useEffect(() => {
     if (listening) {
       setText(transcript);
@@ -103,40 +156,62 @@ export default function Chat() {
       textareaRef.current.style.height = "auto";
     }
 
-    if (text.trim().toLowerCase() === "what is your name") {
-      const assistantMessage = {
-        role: "assistant",
-        content: "I am anonymous, I don't have any name.",
-      };
-      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      return;
-    } else if (text.trim().toLowerCase() === "who created you") {
-      const assistantMessage = {
-        role: "assistant",
-        content:
-          "This application was developed by Yogesh Rajak, a full-stack developer, and is powered by an AI model to provide intelligent and helpful responses.",
-      };
-      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      return;
-    }
-
     try {
-      const response = await axios.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          model: model,
-          messages: updatedMessages,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+      let response;
+      if (model === "openai/gpt-oss-120b:novita") {
+        response = await axios.post(
+          "https://router.huggingface.co/v1/chat/completions",
+          {
+            model,
+            messages: updatedMessages,
           },
-        }
-      );
-
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_HF_TOKEN}`,
+            },
+          }
+        );
+      } else {
+        response = await axios.post(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            model,
+            messages: updatedMessages,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+            },
+          }
+        );
+      }
       const assistantMessage = response.data.choices[0].message;
-      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+      const cleanResponse = assistantMessage.content
+        .replace(/<think>.*?<\/think>/gs, "")
+        .trim();
+
+      if (!cleanResponse) {
+        throw new Error("No AI response received.");
+      }
+      console.log("Sending to addChat:", {
+        userMessage: newUserMessage.content,
+        aiResponse: cleanResponse,
+        userID,
+      });
+      const { data } = await addChat({
+        variables: {
+          userMessage: newUserMessage.content,
+          aiResponse: cleanResponse,
+          userID,
+        },
+      });
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { role: "assistant", content: data.addChat.aiResponse },
+      ]);
     } catch (error) {
       setMessages((prevMessages) => [
         ...prevMessages,
@@ -171,8 +246,8 @@ export default function Chat() {
           )}
 
           {messages.map((msg, index) => {
+            if (!msg?.content) return null;
             const parts = msg.content.split(/```(\w+)?\n([\s\S]*?)```/g);
-
             return (
               <div
                 key={index}
@@ -245,13 +320,15 @@ export default function Chat() {
                             hin: "Hindi Male",
                             fra: "French Female",
                             spa: "Spanish Female",
-                            eng: "UK English Female",
+                            eng: "Hindi Male",
                           };
-                          const voice =
-                            voiceMap[langCode] || "UK English Female";
+                          const voice = voiceMap[langCode] || "Hindi Male";
                           setIsSpeaking(true);
                           responsiveVoice.speak(cleanedText, voice, {
-                            onend: () => setIsSpeaking(false),
+                            onend: () => {
+                              responsiveVoice.pause();
+                              setIsSpeaking(false);
+                            },
                           });
                         }
                       }}

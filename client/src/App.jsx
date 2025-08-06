@@ -6,6 +6,7 @@ import { Signup } from "./components/pages/Signup";
 import Chat from "./components/ui/Chat";
 import { TextToSpeech } from "./components/pages/TextToSpeech";
 import { VoiceChat } from "./components/pages/VoiceChat";
+import { Settings } from "./components/pages/Settings";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/newchat" element={<Chat />} />
           <Route path="/tts" element={<TextToSpeech />} />
           <Route path="/voicechat" element={<VoiceChat />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

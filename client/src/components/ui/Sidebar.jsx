@@ -14,9 +14,9 @@ import { Link } from "react-router-dom";
 const navigation = [
   { name: "New Chat", icon: SquarePen, key: "chat", url: "/newchat" },
   { name: "Image Generator", icon: Images, key: "images" },
-  { name: "Voice Chat", icon: AudioLines, key: "voice", url: "voiceChat" },
-  { name: "Text to speech", icon: Speech, key: "tts", url: "tts" },
-  { name: "Settings", icon: Settings, key: "settings" },
+  { name: "Voice Chat", icon: AudioLines, key: "voice", url: "/voiceChat" },
+  { name: "Text to speech", icon: Speech, key: "tts", url: "/tts" },
+  { name: "Settings", icon: Settings, key: "settings", url: "/settings" },
   { name: "History", icon: History, key: "history" },
 ];
 

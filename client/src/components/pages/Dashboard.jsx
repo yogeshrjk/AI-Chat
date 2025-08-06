@@ -9,7 +9,7 @@ export default function Dashboard() {
     {
       developer: "Meta",
       modelId: "llama-3.1-8b-instant",
-      selected: true,
+      selected: false,
     },
     {
       developer: "Meta",
@@ -19,13 +19,18 @@ export default function Dashboard() {
     {
       developer: "Google",
       modelId: "gemma2-9b-it",
+      selected: true,
+    },
+    {
+      developer: "OpenAI",
+      modelId: "openai/gpt-oss-120b:novita",
       selected: false,
     },
   ]);
 
   //dark theme
   const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "light"
+    () => localStorage.getItem("theme") === "dark"
   );
   // Sync dark mode with document and localStorage
   useEffect(() => {

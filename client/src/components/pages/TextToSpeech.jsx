@@ -43,8 +43,8 @@ export function TextToSpeech() {
   }
 
   const ADD_CHAT = gql`
-    mutation AddChat($message: String!, $userID: ID!) {
-      addChat(message: $message, userID: $userID) {
+    mutation AddTtsChat($message: String!, $userID: ID!) {
+      addTtsChat(message: $message, userID: $userID) {
         _id
         message
         ttsFile
@@ -65,7 +65,7 @@ export function TextToSpeech() {
     }
   `;
 
-  const [addChat] = useMutation(ADD_CHAT);
+  const [addTtsChat] = useMutation(ADD_CHAT);
   const { data, loading, error, refetch } = useQuery(GET_CHAT, {
     variables: { userID },
   });
@@ -138,7 +138,7 @@ export function TextToSpeech() {
     setMessages((prev) => [...prev, generatingMsg]);
 
     try {
-      const { data } = await addChat({
+      const { data } = await addTtsChat({
         variables: {
           message: text.trim(),
           userID,
@@ -148,8 +148,8 @@ export function TextToSpeech() {
       const ttsMsg = {
         userID: userID,
         type: "audio",
-        content: data.addChat.message,
-        ttsFile: data.addChat.ttsFile,
+        content: data.addTtsChat.message,
+        ttsFile: data.addTtsChat.ttsFile,
       };
 
       setMessages((prev) =>
@@ -157,7 +157,7 @@ export function TextToSpeech() {
       );
       setText("");
     } catch (error) {
-      console.error("GraphQL addChat error", error);
+      console.error("GraphQL addTtsChat error", error);
     }
   };
 
@@ -236,7 +236,7 @@ export function TextToSpeech() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center ml-5">
                   <Download
                     className="h-5 w-5 items-center dark:text:white/60 text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
                     onClick={() => {
