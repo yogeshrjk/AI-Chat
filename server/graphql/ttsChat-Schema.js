@@ -1,6 +1,4 @@
 const ttsChatTypeDefs = `
-  scalar Upload
-
   type Chat {
     _id: ID!
     userID: ID!
@@ -14,7 +12,7 @@ const ttsChatTypeDefs = `
   }
 
   type Mutation {
-     addChat(message: String!, userID: ID!): Chat
+     addTtsChat(message: String!, userID: ID!): Chat
 
     deleteChatById(_id: ID!): Boolean
     deleteChatsByUser(userID: ID!): Boolean

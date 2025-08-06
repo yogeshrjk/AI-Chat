@@ -16,7 +16,7 @@ const ttsChatResolvers = {
   },
 
   Mutation: {
-    addChat: async (_, { message, userID }) => {
+    addTtsChat: async (_, { message, userID }) => {
       if (!userID) throw new Error("User ID is required");
       try {
         console.log("Calling Gemini TTS...");
@@ -71,7 +71,7 @@ const ttsChatResolvers = {
         console.log("Saved Chat:", newChat._id);
         return newChat;
       } catch (err) {
-        console.error("addChat internal error:", err.message);
+        console.error("addTtsChat internal error:", err.message);
         throw new Error("Failed to generate and store TTS chat.");
       }
     },
