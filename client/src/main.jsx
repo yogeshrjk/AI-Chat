@@ -7,7 +7,7 @@ import App from "./App.jsx";
 
 const client = new ApolloClient({
   link: createUploadLink({
-    uri: "http://localhost:5008/graphql",
+    uri: import.meta.env.VITE_GRAPHQL_URI,
   }),
   cache: new InMemoryCache(),
 });
