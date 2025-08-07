@@ -76,13 +76,15 @@ const ttsChatResolvers = {
       }
     },
 
-    deleteChatById: async (_, { _id }) => {
+    deleteTtsChatById: async (_, { _id }) => {
       const deleted = await chatMessage.findByIdAndDelete(_id);
       return !!deleted;
     },
-    deleteChatsByUser: async (_, { userID }) => {
-      const deleted = await chatMessage.deleteMany({ userID });
-      return !!deleted.deletedCount;
+    deleteTtsChatsByUser: async (_, { userID }) => {
+      const deletedChats = await chatMessage.find({ userID });
+      const deletedIds = deletedChats.map((c) => c._id);
+      await chatMessage.deleteMany({ userID });
+      return deletedIds;
     },
   },
 };

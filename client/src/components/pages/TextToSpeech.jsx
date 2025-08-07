@@ -1,8 +1,10 @@
 import { marked } from "marked";
 import { gql, useMutation, useQuery } from "@apollo/client";
+import { Link } from "react-router-dom";
 import {
   Copy,
-  Plus,
+  Images,
+  SquarePen,
   Mic,
   MicOff,
   ArrowUp,
@@ -291,7 +293,12 @@ export function TextToSpeech() {
                 }
               }}
             ></textarea>
-            <Plus className="absolute bottom-2.5 left-2 text-black/80 dark:text-white/80 rounded-full h-6.5 w-6.5 p-1 hover:scale-110" />
+            <Link to="/generateImage">
+              <Images className="absolute bottom-2.5 left-2 text-black/80 dark:text-white/80 h-6.5 w-6.5 p-1 hover:scale-110" />
+            </Link>
+            <Link to="/newchat">
+              <SquarePen className="absolute bottom-2.5 left-8 text-black/80 dark:text-white/80 h-6.5 w-6.5 p-1 hover:scale-110" />
+            </Link>
             {listening ? (
               <MicOff
                 className="absolute bottom-2.5 right-10 animate-pulse text-black/80 dark:text-white/80 rounded-full h-6.5 w-6.5 p-1 hover:scale-110"

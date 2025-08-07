@@ -14,8 +14,8 @@ const ttsChatTypeDefs = `
   type Mutation {
      addTtsChat(message: String!, userID: ID!): Chat
 
-    deleteChatById(_id: ID!): Boolean
-    deleteChatsByUser(userID: ID!): Boolean
+    deleteTtsChatById(_id: ID!): Boolean
+    deleteTtsChatsByUser(userID: ID!): [ID!]!
   }
 `;
 

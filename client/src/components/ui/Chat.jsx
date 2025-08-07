@@ -1,10 +1,11 @@
 import { Highlight, themes } from "prism-react-renderer";
 import { gql, useMutation, useQuery } from "@apollo/client";
-import { jwtDecode } from "jwt-decode";
 import { marked } from "marked";
+import { Link } from "react-router-dom";
 import {
   Copy,
-  Plus,
+  Images,
+  Speech,
   Mic,
   MicOff,
   ArrowUp,
@@ -21,19 +22,8 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 
 export default function Chat() {
-  const token = localStorage.getItem("token");
-  let userID = null;
-
-  if (token) {
-    try {
-      const decoded = jwtDecode(token);
-      userID = decoded.userId;
-    } catch (err) {
-      console.error("Failed to decode token", err);
-    }
-  }
-
-  const { model } = useOutletContext();
+  const { model, userID, conversationID, refetchConversations } =
+    useOutletContext();
   const welcomeMessages = [
     "Hello, how can I assist you today?",
     "What's on your mind, I'm all ears!",
@@ -68,11 +58,13 @@ export default function Chat() {
       $userMessage: String!
       $aiResponse: String!
       $userID: ID!
+      $conversationID: ID!
     ) {
       addChat(
         userMessage: $userMessage
         aiResponse: $aiResponse
         userID: $userID
+        conversationID: $conversationID
       ) {
         _id
         userMessage
@@ -82,9 +74,19 @@ export default function Chat() {
     }
   `;
 
+  const CREATE_CONVERSATION = gql`
+    mutation CreateConversation($userID: ID!, $title: String) {
+      createConversation(userID: $userID, title: $title) {
+        _id
+        title
+        createdAt
+      }
+    }
+  `;
+
   const GET_CHATS = gql`
-    query GetChats($userID: ID!) {
-      getChats(userID: $userID) {
+    query GetChats($userID: ID!, $conversationID: ID!) {
+      getChats(userID: $userID, conversationID: $conversationID) {
         _id
         userID
         userMessage
@@ -95,8 +97,11 @@ export default function Chat() {
   `;
 
   const [addChat] = useMutation(ADD_CHAT);
+  const [createConversation] = useMutation(CREATE_CONVERSATION);
   const { data, loading, error, refetch } = useQuery(GET_CHATS, {
-    variables: { userID },
+    variables: { userID, conversationID },
+    skip: !conversationID,
+    fetchPolicy: "network-only",
   });
 
   useEffect(() => {
@@ -108,6 +113,13 @@ export default function Chat() {
       setMessages(chats);
     }
   }, [data]);
+
+  // Refetch chats when conversationID changes to ensure up-to-date messages
+  useEffect(() => {
+    if (!conversationID && sessionStorage.getItem("newChat") === "true") {
+      setMessages([]); // Clear previous conversation from UI
+    }
+  }, [conversationID]);
 
   // SpeechRecognition
   const {
@@ -157,6 +169,25 @@ export default function Chat() {
     }
 
     try {
+      let currentConversationID = conversationID;
+      const isNewChat = sessionStorage.getItem("newChat") === "true";
+      if (!currentConversationID || isNewChat) {
+        const shortTitle = newUserMessage.content
+          .split(" ")
+          .slice(0, 4)
+          .join(" ");
+        const { data } = await createConversation({
+          variables: {
+            userID,
+            title: shortTitle,
+          },
+        });
+        currentConversationID = data.createConversation._id;
+        sessionStorage.setItem("conversationID", currentConversationID);
+        sessionStorage.removeItem("newChat");
+        await refetchConversations?.();
+      }
+
       let response;
       if (model === "openai/gpt-oss-120b:novita") {
         response = await axios.post(
@@ -199,18 +230,20 @@ export default function Chat() {
         userMessage: newUserMessage.content,
         aiResponse: cleanResponse,
         userID,
+        conversationID: currentConversationID,
       });
-      const { data } = await addChat({
+      const { data: chatData } = await addChat({
         variables: {
           userMessage: newUserMessage.content,
           aiResponse: cleanResponse,
           userID,
+          conversationID: currentConversationID,
         },
       });
 
       setMessages((prevMessages) => [
         ...prevMessages,
-        { role: "assistant", content: data.addChat.aiResponse },
+        { role: "assistant", content: chatData.addChat.aiResponse },
       ]);
     } catch (error) {
       setMessages((prevMessages) => [
@@ -419,7 +452,12 @@ export default function Chat() {
                 }
               }}
             ></textarea>
-            <Plus className="absolute bottom-2.5 left-2 text-black/80 dark:text-white/80 rounded-full h-6.5 w-6.5 p-1 hover:scale-110" />
+            <Link to="/generateImage">
+              <Images className="absolute bottom-2.5 left-2 text-black/80 dark:text-white/80 h-6.5 w-6.5 p-1 hover:scale-110" />
+            </Link>
+            <Link to="/tts">
+              <Speech className="absolute bottom-2.5 left-8 text-black/80 dark:text-white/80 h-6.5 w-6.5 p-1 hover:scale-110" />
+            </Link>
             {listening ? (
               <MicOff
                 className="absolute bottom-2.5 right-10 animate-pulse text-black/80 dark:text-white/80 rounded-full h-6.5 w-6.5 p-1 hover:scale-110"

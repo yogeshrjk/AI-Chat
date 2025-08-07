@@ -2,9 +2,24 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "../ui/Sidebar";
 import { TopBar } from "../ui/Top-Nav";
 import { Outlet } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 export default function Dashboard() {
+  const token = localStorage.getItem("token");
+  let userID = null;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      userID = decoded.userId;
+    } catch (err) {
+      console.error("Failed to decode token", err);
+    }
+  }
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [currModel, setCurrModel] = useState("llama-3.1-8b-instant");
+  const [conversationID, setConversationID] = useState(() => {
+    return sessionStorage.getItem("conversationID") || null;
+  });
   const [modelList, setModelList] = useState([
     {
       developer: "Meta",
@@ -50,6 +65,11 @@ export default function Dashboard() {
         <Sidebar
           isNavOpen={isNavOpen}
           toggleSidebar={() => setIsNavOpen(!isNavOpen)}
+          userID={userID}
+          onSelectConversation={(id) => {
+            sessionStorage.setItem("conversationID", id);
+            setConversationID(id);
+          }}
         />
 
         {/* Right side layout */}
@@ -66,12 +86,15 @@ export default function Dashboard() {
               setCurrModelProp={setCurrModel}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
+              userID={userID}
             />
           </div>
 
           {/* Main content */}
           <div className="overflow-y-auto h-screen">
-            <Outlet context={{ model: currModel }} />
+            <Outlet
+              context={{ model: currModel, userID: userID, conversationID }}
+            />
           </div>
         </div>
       </div>

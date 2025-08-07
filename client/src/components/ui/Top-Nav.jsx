@@ -10,18 +10,40 @@ import {
   Bug,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { DeleteConfirmation } from "../ui/DeleteConfirmation";
 import BugForm from "./ReportForm";
+import { gql, useMutation } from "@apollo/client";
+
 export const TopBar = ({
   model,
   setModel,
   setCurrModelProp,
   darkMode,
   setDarkMode,
+  userID,
 }) => {
   const [showModels, setShowModels] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const dropdownRef = useRef(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    show: false,
+    userID: null,
+  });
+
+  const DELETE_CHAT = gql`
+    mutation deleteChatsByUser($userID: ID!) {
+      deleteChatsByUser(userID: $userID)
+    }
+  `;
+  const DELETE_TTS_CHAT = gql`
+    mutation deleteTtsChatsByUser($userID: ID!) {
+      deleteTtsChatsByUser(userID: $userID)
+    }
+  `;
+
+  const [deleteChats] = useMutation(DELETE_CHAT);
+  const [deleteTtsChats] = useMutation(DELETE_TTS_CHAT);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -106,7 +128,10 @@ export const TopBar = ({
               <Bug className="w-4 h-4 " />
               <span className="text-sm">Report</span>
             </div>
-            <div className="flex gap-2 items-center hover:bg-black/10 dark:hover:bg-white/10 px-4 py-2 rounded-md text-red-400 hover:text-red-600">
+            <div
+              className="flex gap-2 items-center hover:bg-black/10 dark:hover:bg-white/10 px-4 py-2 rounded-md text-red-400 hover:text-red-600"
+              onClick={() => setDeleteConfirm({ show: true, userID: userID })}
+            >
               <Trash2 className="w-4 h-4 " />
               <span className="text-sm">Delete</span>
             </div>
@@ -147,6 +172,19 @@ export const TopBar = ({
             ))}
           </div>
         </div>
+      )}
+      {deleteConfirm.show && (
+        <DeleteConfirmation
+          onConfirm={() => {
+            deleteChats({ variables: { userID: deleteConfirm.userID } });
+            deleteTtsChats({
+              variables: { userID: deleteConfirm.userID },
+            });
+            setDeleteConfirm({ show: false, userID: null });
+            window.location.reload();
+          }}
+          onCancel={() => setDeleteConfirm({ show: false, userID: null })}
+        />
       )}
       {showReportForm && (
         <div className="fixed inset-0 bg-white/10 dark:bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center">
