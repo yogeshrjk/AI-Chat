@@ -38,7 +38,10 @@ export default function BugForm({ closeForm }) {
 
     try {
       // IMPORTANT: Don't set Content-Type header - let axios handle it
-      const { data } = await axios.post("/api/report", formData);
+      const { data } = await axios.post(
+        import.meta.env.VITE_GRAPHQL_URI + "/api/report",
+        formData
+      );
       console.log("Report response:", data);
       setMessage("✅ Bug reported successfully!");
       setTitle("");

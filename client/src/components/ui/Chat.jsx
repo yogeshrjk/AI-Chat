@@ -260,10 +260,10 @@ export default function Chat() {
   }
 
   return (
-    <div className="h-full md:px-10 md:py-5 select-text">
+    <div className="h-full md:pb-5 select-text">
       <div className="h-full flex flex-col rounded-md">
         <div
-          className="px-2 md:px-0 md:w-[60%] mx-auto flex-1 overflow-y-auto break-words max-w-full rounded-t-xl pb-10"
+          className="px-2 md:px-0 md:w-[80%] lg:w-[60%] mx-auto flex-1 overflow-y-auto break-words max-w-full pb-2"
           style={{
             scrollBehavior: "smooth",
             scrollbarWidth: "none",
@@ -287,7 +287,7 @@ export default function Chat() {
                 className={`relative shadow-md min-h-[2.5rem] text-sm md:text-md md:px-4 p-3 my-5 rounded-md whitespace-wrap ${
                   msg.role === "user"
                     ? "bg-white/40 dark:bg-white/30 backdrop-blur-md text-black/80 dark:text-white/80 self-end ml-auto w-fit"
-                    : "bg-black/60 backdrop-blur-md text-white/80 self-start mr-auto w-fit max-w-full overflow-x-auto pb-10"
+                    : "bg-black/60 backdrop-blur-md text-white/80 self-start mr-auto w-fit max-w-[calc(100vw-1rem)] md:max-w-full overflow-x-auto pb-10"
                 }`}
               >
                 {parts.map((part, i) => {
@@ -324,11 +324,23 @@ export default function Chat() {
                       </Highlight>
                     );
                   } else if (i % 3 === 0) {
-                    return (
+                    // Check for table in the HTML output
+                    const html = marked(part);
+                    const hasTable = html.includes("<table");
+                    return hasTable ? (
+                      <div key={i} className="overflow-x-auto max-w-screen">
+                        <div
+                          className="markdown-output"
+                          dangerouslySetInnerHTML={{
+                            __html: html,
+                          }}
+                        />
+                      </div>
+                    ) : (
                       <div
                         key={i}
                         dangerouslySetInnerHTML={{
-                          __html: marked(part),
+                          __html: html,
                         }}
                       />
                     );
@@ -431,7 +443,7 @@ export default function Chat() {
         </div>
         {/* input area */}
         <div
-          className="relative p-4 flex flex-col-reverse bg-white dark:bg-black/60 backdrop-blur-md w-full sm:w-[80%] md:w-[60%] max-w-full sm:rounded-b-xl mx-auto"
+          className="relative p-4 flex flex-col-reverse bg-white dark:bg-black/60 backdrop-blur-md w-full md:w-[60%] max-w-full sm:rounded-b-xl mx-auto"
           // style={{
           //   boxShadow: "rgba(35, 35, 35,0.8)0px -25px 20px -10px",
           // }}
@@ -443,7 +455,7 @@ export default function Chat() {
               value={text}
               placeholder="Ask anything"
               onInput={handleInput}
-              className="w-full mb-8 md:px-2 text-sm text-black/80 dark:text-white/80 max-h-[12rem] overflow-y-auto resize-none scrollbar-none placeholder-black/40 dark:placeholder-white/40 placeholder:align-bottom focus:outline-none focus:ring-0 bg-none"
+              className="w-full mb-8 md:px-2 text-sm text-black/80 dark:text-white/80 md:w-[80%] lg:w-[60%] overflow-y-auto resize-none scrollbar-none placeholder-black/40 dark:placeholder-white/40 placeholder:align-bottom focus:outline-none focus:ring-0 bg-none"
               style={{ height: "2.5rem" }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

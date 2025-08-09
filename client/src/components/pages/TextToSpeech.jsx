@@ -71,23 +71,6 @@ export function TextToSpeech() {
   const { data, loading, error, refetch } = useQuery(GET_CHAT, {
     variables: { userID },
   });
-  // useEffect(() => {
-  //   console.log("GET_CHAT →", { data, loading, error });
-  // }, [data, loading, error]);
-
-  // if (loading)
-  //   return (
-  //     <div className="flex items-center justify-center gap-2 h-[60vh]">
-  //       <div className="h-4 w-4  animate-spin rounded-full border-2 border-[#103d46] border-t-transparent"></div>
-  //       <p className="">Loading Notes...</p>
-  //     </div>
-  //   );
-  // if (error)
-  //   return (
-  //     <p className="px-10 py-5 text-red-500">
-  //       Error loading Notes: {error.message}
-  //     </p>
-  //   );
 
   useEffect(() => {
     if (data?.getTtsChats) {

@@ -8,13 +8,12 @@ import {
   BotMessageSquare,
   AudioLines,
   Speech,
-  CornerDownRight,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { gql, useQuery, useMutation } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 const navigation = [
   { name: "New Chat", icon: SquarePen, key: "chat", url: "/newchat" },
   { name: "Image Generator", icon: Images, key: "images" },
@@ -31,6 +30,7 @@ export function Sidebar({
 }) {
   const [isMobileVisible, setIsMobileVisible] = useState(false);
   const [showRecent, setShowRecent] = useState(false);
+  const navigate = useNavigate();
 
   const GET_USER = gql`
     query getUser($userID: ID!) {
@@ -192,15 +192,17 @@ export function Sidebar({
                 )}
               </div>
             )}
-            <div className="px-2 max-h-[40vh] lg:max-h-[50vh] ml-2 space-y-1 overflow-y-auto">
+            <div className="px-2 max-h-[40vh] lg:max-h-[50vh] space-y-1 overflow-y-auto">
               {convoData?.getConversations.map((conv) => (
                 <button
                   key={conv._id}
                   onClick={() => {
                     onSelectConversation(conv._id);
+                    sessionStorage.setItem("conversationID", conv._id);
                     refetchConversations();
+                    navigate("/newchat");
                   }}
-                  className={`w-full flex gap-2 text-left text-sm truncate px-2 py-2 rounded-lg ${
+                  className={`w-full flex justify-between items-center gap-2 text-left text-xs truncate px-2 py-2 rounded-lg ${
                     conv._id === sessionStorage.getItem("conversationID")
                       ? "text-black dark:text-white"
                       : "text-black/60 dark:text-white/60 hover:bg-black/20 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"
@@ -210,7 +212,7 @@ export function Sidebar({
                       : "hidden"
                   }`}
                 >
-                  <CornerDownRight className="h-4 w-4" />
+                    
                   {conv.title || "Untitled"}
                 </button>
               ))}

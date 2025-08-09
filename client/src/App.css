@@ -18,3 +18,16 @@ body {
   background-color: rgb(35, 35, 35);
   color: #fff;
 }
+
+.markdown-output table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+.markdown-output th,
+.markdown-output td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
