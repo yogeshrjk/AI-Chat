@@ -32,14 +32,9 @@ export default function Dashboard() {
       selected: false,
     },
     {
-      developer: "Google",
-      modelId: "gemma2-9b-it",
-      selected: true,
-    },
-    {
       developer: "OpenAI",
       modelId: "openai/gpt-oss-120b:novita",
-      selected: false,
+      selected: true,
     },
   ]);
 
