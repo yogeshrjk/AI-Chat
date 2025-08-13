@@ -3,6 +3,14 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const user = require("../models/user-model");
 const uploadToCloudinary = require("../utils/cloudinary"); // adjust path as needed
+const admin = require("firebase-admin");
+
+if (!admin.apps.length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 const userResolvers = {
   Query: {
@@ -87,6 +95,61 @@ const userResolvers = {
 
       return {
         ...userWithoutPassword,
+        token,
+      };
+    },
+    loginWithGoogle: async (_, { idToken }) => {
+      let decodedToken;
+      try {
+        decodedToken = await admin.auth().verifyIdToken(idToken);
+      } catch (err) {
+        throw new Error("Invalid Google ID token");
+      }
+
+      const { uid, email, name = "", picture } = decodedToken;
+      if (!email) {
+        throw new Error("Google account does not have an email");
+      }
+
+      let foundUser = await user.findOne({ email });
+      if (!foundUser) {
+        const nameParts = name.trim().split(" ");
+        const firstName = nameParts.shift() || "Google";
+        const lastName = nameParts.join(" ") || "User";
+
+        foundUser = await user.create({
+          firstName,
+          lastName,
+          email,
+          profilePic: picture || null,
+          googleId: uid,
+          password: null,
+        });
+      } else {
+        let updated = false;
+        if (!foundUser.googleId) {
+          foundUser.googleId = uid;
+          updated = true;
+        }
+        if (!foundUser.profilePic && picture) {
+          foundUser.profilePic = picture;
+          updated = true;
+        }
+        if (updated) {
+          await foundUser.save();
+        }
+      }
+
+      const token = jwt.sign(
+        { userId: foundUser._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "7d",
+        }
+      );
+
+      return {
+        ...foundUser._doc,
         token,
       };
     },

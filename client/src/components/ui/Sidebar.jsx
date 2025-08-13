@@ -16,7 +16,12 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 const navigation = [
   { name: "New Chat", icon: SquarePen, key: "chat", url: "/newchat" },
-  { name: "Image Generator", icon: Images, key: "images" },
+  {
+    name: "Image Generator",
+    icon: Images,
+    key: "images",
+    url: "/imagegenerator",
+  },
   { name: "Voice Chat", icon: AudioLines, key: "voice", url: "/voiceChat" },
   { name: "Text to speech", icon: Speech, key: "tts", url: "/tts" },
   { name: "Settings", icon: Settings, key: "settings", url: "/settings" },
@@ -65,11 +70,12 @@ export function Sidebar({
   });
 
   const user = data?.getUser;
+  localStorage.setItem("userName", user?.firstName);
   useEffect(() => {
     refetchConversations();
   }, []);
   if (loading) return null;
-  if (!user) return <p className="text-red-500">User not found</p>;
+  // if (!user) return <p className="text-red-500">User not found</p>;
   return (
     <>
       {/* Mobile Toggle Button */}
@@ -212,7 +218,6 @@ export function Sidebar({
                       : "hidden"
                   }`}
                 >
-                    
                   {conv.title || "Untitled"}
                 </button>
               ))}

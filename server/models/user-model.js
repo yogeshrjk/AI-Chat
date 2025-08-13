@@ -11,13 +11,17 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
       minlength: 10,
       maxlength: 13,
     },
     dob: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
     },
     email: {
       type: String,
@@ -27,12 +31,16 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
     },
     password: {
       type: String,
-      required: true,
       select: false,
+      required: function () {
+        return !this.googleId;
+      },
     },
     profilePic: {
       type: String,
@@ -41,7 +49,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
+
   {
     timestamps: true,
   }

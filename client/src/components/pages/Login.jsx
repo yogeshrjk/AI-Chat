@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Mail, LockKeyhole, BotMessageSquare, Sun, Moon } from "lucide-react";
 import { gql, useMutation } from "@apollo/client";
 import { Link, useNavigate } from "react-router-dom";
+import { signInWithGoogle } from "../../utils/firebase";
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -41,7 +42,18 @@ export default function Login() {
     }
   `;
 
+  const LOGIN_WITH_GOOGLE = gql`
+    mutation LoginWithGoogle($idToken: String!) {
+      loginWithGoogle(idToken: $idToken) {
+        _id
+        email
+        token
+      }
+    }
+  `;
+
   const [login, { loading, error }] = useMutation(LOGIN);
+  const [loginWithGoogleMutation] = useMutation(LOGIN_WITH_GOOGLE);
 
   const handleSubmit = async () => {
     try {
@@ -58,6 +70,21 @@ export default function Login() {
       window.location.href = "/newchat";
     } catch (err) {
       console.error("Login failed:", err);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithGoogle();
+      const idToken = await result.user.getIdToken();
+      const { data } = await loginWithGoogleMutation({
+        variables: { idToken },
+      });
+      localStorage.setItem("token", data.loginWithGoogle.token);
+      localStorage.setItem("userId", data.loginWithGoogle._id);
+      window.location.href = "/newchat";
+    } catch (err) {
+      console.error("Google login failed:", err);
     }
   };
 
@@ -163,7 +190,10 @@ export default function Login() {
             <p className="text-center text-xs text-black dark:text-white">OR</p>
             <hr className="border-gray-400" />
           </div>
-          <button className="mt-4 w-full flex items-center justify-center gap-2 bg-[rgb(35,35,35)] text-sm py-2 rounded-md hover:scale-105 duration-110">
+          <button
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-[rgb(35,35,35)] text-white text-sm py-2 rounded-md hover:scale-105 duration-110"
+            onClick={handleGoogleLogin}
+          >
             <img
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"

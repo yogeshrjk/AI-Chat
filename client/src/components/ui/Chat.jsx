@@ -24,31 +24,12 @@ import SpeechRecognition, {
 export default function Chat() {
   const { model, userID, conversationID, refetchConversations } =
     useOutletContext();
-  const welcomeMessages = [
-    "Hello, how can I assist you today?",
-    "What's on your mind, I'm all ears!",
-    "Need help, advice, or just someone to talk to?",
-    "I'm here to listen and help, what's up?",
-    "Hello, I can answer any question you have or just chat!",
-    "Hi, how can I make your day better?",
-    "What can I help you with, ask me anything!",
-    "Hello, I'm here to provide assistance and conversation.",
-    "Hi, I'm happy to help, what's your priority?",
-    "Need answers, advice, or just a chat?",
-    "Hello, I'm your AI chat assistant, how can I help?",
-    "Hi, what's going on that you'd like to talk about?",
-    "I'm here to help you with any questions or topics.",
-    "Hello, how can I assist you, ask me anything!",
-    "Hi, need help or just a chat, I'm here for you?",
-  ];
-  function getWelcomeMessage() {
-    return welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-  }
+
+  const [welcomeMessage, setWelcomeMessage] = useState("");
 
   const [text, setText] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [welcomeMessage, setWelcomeMessage] = useState(getWelcomeMessage());
   const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -117,7 +98,7 @@ export default function Chat() {
   // Refetch chats when conversationID changes to ensure up-to-date messages
   useEffect(() => {
     if (!conversationID && sessionStorage.getItem("newChat") === "true") {
-      setMessages([]); // Clear previous conversation from UI
+      setMessages([]);
     }
   }, [conversationID]);
 
@@ -129,10 +110,34 @@ export default function Chat() {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
   useEffect(() => {
-    if (messages.length === 0) {
-      setWelcomeMessage(getWelcomeMessage());
-    }
-  }, [messages.length]);
+    const storedName =
+      localStorage.getItem("userName") || sessionStorage.getItem("userName");
+    const userName =
+      storedName && storedName !== "undefined" && storedName !== "null"
+        ? storedName
+        : "there";
+
+    const welcomeMessages = [
+      `Welcome back ${userName}! How can I help you today?`,
+      "Hello, how can I assist you today?",
+      "What's on your mind, I'm all ears!",
+      "Need help, advice, or just someone to talk to?",
+      "I'm here to listen and help, what's up?",
+      "Hi, how can I make your day better?",
+      "What can I help you with, ask me anything!",
+      "Hi, I'm happy to help, what's your priority?",
+      "Need answers, advice, or just a chat?",
+      "Hello, I'm your AI chat assistant, how can I help?",
+      "Hi, what's going on that you'd like to talk about?",
+      "I'm here to help you with any questions or topics.",
+      "Hello, how can I assist you, ask me anything!",
+      "Hi, need help or just a chat, I'm here for you?",
+    ];
+
+    setWelcomeMessage(
+      welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]
+    );
+  }, []);
 
   const handleInput = (e) => {
     const textarea = e.target;
@@ -442,12 +447,7 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
         {/* input area */}
-        <div
-          className="relative p-4 flex flex-col-reverse bg-white dark:bg-black/60 backdrop-blur-md w-full md:w-[60%] max-w-full sm:rounded-b-xl mx-auto"
-          // style={{
-          //   boxShadow: "rgba(35, 35, 35,0.8)0px -25px 20px -10px",
-          // }}
-        >
+        <div className="relative p-4 flex flex-col-reverse bg-white dark:bg-black/60 backdrop-blur-md w-full md:w-[60%] max-w-full sm:rounded-b-xl mx-auto">
           <div className="w-full flex items-end ">
             <textarea
               name="input-text"

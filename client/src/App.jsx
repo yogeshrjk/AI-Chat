@@ -7,6 +7,7 @@ import Chat from "./components/ui/Chat";
 import { TextToSpeech } from "./components/pages/TextToSpeech";
 import { VoiceChat } from "./components/pages/VoiceChat";
 import { Settings } from "./components/pages/Settings";
+import ImageGenerator from "./components/pages/ImageGenerator";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/tts" element={<TextToSpeech />} />
           <Route path="/voicechat" element={<VoiceChat />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/imagegenerator" element={<ImageGenerator />} />
         </Route>
       </Routes>
     </BrowserRouter>

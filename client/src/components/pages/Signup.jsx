@@ -142,8 +142,24 @@ export function Signup() {
         </button>
       </div>
       {loading && (
-        <div className="fixed inset-0 bg-white/20 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
-          <BotMessageSquare className="w-25 h-25 text-black" />
+        <div className="fixed inset-0 bg-white/20 backdrop-blur-sm bg-opacity-50 flex flex-col items-center justify-center z-50">
+          <BotMessageSquare className="w-25 h-25 text-black mb-4" />
+          <div className="w-48 h-2 bg-gray-300 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-black progress-bar"
+              style={{
+                animation: `grow 5s linear forwards`,
+              }}
+            ></div>
+          </div>
+          <style>
+            {`
+        @keyframes grow {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+      `}
+          </style>
         </div>
       )}
 

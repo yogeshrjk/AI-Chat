@@ -28,6 +28,8 @@ type Mutation {
   password: String!
   ):User!
 
+  loginWithGoogle(idToken: String!): User!
+  
   updateUser(
     _id:ID!
     phoneNumber: String
