@@ -60,6 +60,11 @@ const mergedResolvers = mergeResolvers(resolvers);
     app.use(express.static(__dirname));
     app.use("/api", reportRouter);
 
+    //render call to awake srever
+    app.get("/health", (req, res) => {
+      res.status(200).send("ok");
+    });
+
     connectDB();
 
     await new Promise((resolve) => httpServer.listen(PORT, resolve));
